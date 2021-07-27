@@ -77,7 +77,7 @@ def node(update, context):
             try:
 
                 out_bytes = subprocess.check_output(
-                    cmd, shell=True, timeout=600, stderr=subprocess.STDOUT)
+                    cmd, shell=True, timeout=3600, stderr=subprocess.STDOUT)
 
                 out_text = out_bytes.decode('utf-8')
 
@@ -823,11 +823,11 @@ def getSToken():
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'zh-cn',
         'Referer': 'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=%s&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport' % time_stamp,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
+        'User-Agent': 'jdapp;android;10.0.5;11;0393465333165363-5333430323261366;network/wifi;model/M2102K1C;osVer/30;appBuild/88681;partner/lc001;eufv/1;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 11; M2102K1C Build/RKQ1.201112.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045534 Mobile Safari/537.36',
         'Host': 'plogin.m.jd.com'
     }
     try:
-        resp = requests.get(url=get_url, headers=get_header)
+        resp = requests.get(url=get_url, headers=get_header, verify=False)
         parseGetRespCookie(resp.headers, resp.json())
         logger.info(resp.headers)
         logger.info(resp.json())
@@ -866,12 +866,12 @@ def getOKLToken():
         'Accept': 'application/json, text/plain, */*',
         'Cookie': cookies,
         'Referer': 'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state=%s&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport' % post_time_stamp,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
+        'User-Agent': 'jdapp;android;10.0.5;11;0393465333165363-5333430323261366;network/wifi;model/M2102K1C;osVer/30;appBuild/88681;partner/lc001;eufv/1;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 11; M2102K1C Build/RKQ1.201112.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045534 Mobile Safari/537.36',
         'Host': 'plogin.m.jd.com',
     }
     try:
         global okl_token
-        resp = requests.post(url=post_url, headers=post_header, data=post_data, timeout=20)
+        resp = requests.post(url=post_url, headers=post_header, data=post_data, timeout=20, verify=False)
         parsePostRespCookie(resp.headers, resp.json())
         logger.info(resp.headers)
     except Exception as error:
@@ -926,10 +926,10 @@ def chekLogin():
             'Connection': 'Keep-Alive',
             'Content-Type': 'application/x-www-form-urlencoded; Charset=UTF-8',
             'Accept': 'application/json, text/plain, */*',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
+            'User-Agent': 'jdapp;android;10.0.5;11;0393465333165363-5333430323261366;network/wifi;model/M2102K1C;osVer/30;appBuild/88681;partner/lc001;eufv/1;jdSupportDarkMode/0;Mozilla/5.0 (Linux; Android 11; M2102K1C Build/RKQ1.201112.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045534 Mobile Safari/537.36',
 
         }
-        resp = requests.post(url=check_url, headers=check_header, data=check_data, timeout=30)
+        resp = requests.post(url=check_url, headers=check_header, data=check_data, timeout=30, verify=False)
         data = resp.json()
         if data.get("errcode") == 0:
             parseJDCookies(resp.headers)
@@ -950,6 +950,31 @@ def parseJDCookies(headers):
     logger.info(pt_pin)
     jd_cookie = f'pt_key={pt_key};pt_pin={pt_pin};'
 
+    if 'COOKIES_LIST' in os.environ:
+        cookies_list_dir = os.getenv("COOKIES_LIST")
+
+        with open(cookies_list_dir, "r", encoding="utf-8") as cookies_list_old:
+            lines = cookies_list_old.readlines()
+            cookies_list_old.seek(0)
+            cookies_list_old_all = cookies_list_old.read()
+
+        with open(cookies_list_dir, "w", encoding="utf-8") as cookies_list_new:
+            if pt_pin in cookies_list_old_all:
+                n = 0
+                for line in lines:
+                    if pt_pin in line:
+                        lines[n] = jd_cookie + "\n"
+                        break
+                    n += 1
+                cookies_list_new.writelines(lines)
+            else:
+                n = len(lines) - 1
+                if "\n" not in lines[n]:
+                    line = "\n" + jd_cookie + "\n"
+                else:
+                    line = jd_cookie + "\n"
+                lines.append(line)
+                cookies_list_new.writelines(lines)
 
 def saveFile(update, context):
     from_user_id = update.message.from_user.id
