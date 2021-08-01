@@ -22,7 +22,6 @@ RUN set -ex \
     && mkdir logs \
     && npm config set registry https://registry.npm.taobao.org \
     && npm install \
-    && npm install @types/node download got http-server qrcode-terminal request tough-cookie tslib tunnel stream zlib vm png-js axios date-fns ts-md5 dotenv crypto-js --prefix /scripts \
     && cp /scripts/docker/docker_entrypoint.sh /usr/local/bin \
     && chmod +x /usr/local/bin/docker_entrypoint.sh
 
