@@ -17,10 +17,6 @@ RUN set -ex \
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
-    #&& mkdir -p /root/.ssh \
-    #&& echo -e $KEY > /root/.ssh/id_rsa \
-    #&& chmod 600 /root/.ssh/id_rsa \
-    #&& ssh-keyscan gitee.com > /root/.ssh/known_hosts \
     && git clone -b $REPO_BRANCH $REPO_URL /scripts \
     && cd /scripts \
     && mkdir logs \
